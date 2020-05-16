@@ -1,11 +1,13 @@
-# Coursera Practical Machine Learning Project
+## Coursera Practical Machine Learning Project
 Coursera Practical Machine Learning Project: Prediction on Exercise Data
-
 Ren Tu
-
 5/16/2020
 
-Executive Summary
+# Repository Files:
+HTML assignment report: HTML_report.md
+RMD assignment code: coursera_practical_ml_project.Rmd
+
+# Executive Summary
 
 This project draws from the fitness tracker data on six people doing exercises in 5 different ways. The goal is to create a classification model to predict the type of exercise done.
 
