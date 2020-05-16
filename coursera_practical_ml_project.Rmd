@@ -1,0 +1,95 @@
+---
+title: "Coursera Practical Machine Learning Project: Prediction on Exercise Data"
+author: "Ren Tu"
+date: "5/16/2020"
+output: html_document
+---
+
+
+## Executive Summary
+
+This project draws from the fitness tracker data on six people doing exercises in 5 different ways. The goal is to create a classification model to predict the type of exercise done.
+
+More information on the dataset is available here:
+http://web.archive.org/web/20161224072740/http:/groupware.les.inf.puc-rio.br/har
+
+The training data for this project are available here:
+https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv
+
+The testing data for this project are available here:
+https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv
+
+Using 52 numerical measurement variables, we produced a KNN model that achieved 100% accuracy and a near-zero p-value on the training set. Using this KNN model, we would expect predictions on out of sample data to have some additional error as the model may be overfitting the training data. However the overall accuracy on out of sample predictions should remain very high.
+
+## Exploratory Data Analysis
+
+We begin by reading the data files into R, taking a look at the dimensions of dataset, and checking for NA values:
+
+```{r, echo=TRUE}
+train <- read.csv("pml-training.csv")
+test <- read.csv("pml-testing.csv")
+train$classe <- factor(train$classe)
+dim(train)
+sum(is.na(train))
+```
+
+With so many columns and NA values, we can clean up the training dataset by removing all columns that have NA values. 
+
+```{r, echo=TRUE}
+na_results <- colSums(is.na(train))
+na_columns <- na_results[na_results>0]
+df <- train[, !names(train) %in% names(na_columns)]
+dim(df)
+sum(is.na(df))
+```
+
+The new "df" training set has less columns and zero NA values.
+
+Next, we will take a look at the individual variables:
+
+```{r, echo=TRUE}
+str(df)
+```
+
+## Building Model
+
+We begin building the model by choosing the predictors. Since actual numerical measurements from the fitness devices are likely the most relevant data, we will use 52 numerical measurements on the belt, arm, dumbbell, and forearm:
+
+```{r, echo=TRUE}
+filter1 <- c("roll_belt","pitch_belt","yaw_belt","total_accel_belt",
+             "gyros_belt_x","gyros_belt_y","gyros_belt_z",
+             "accel_belt_x","accel_belt_y","accel_belt_z",
+             "magnet_belt_x","magnet_belt_y","magnet_belt_z",
+             "roll_arm","pitch_arm","yaw_arm","total_accel_arm",
+             "gyros_arm_x","gyros_arm_y","gyros_arm_z",
+             "accel_arm_x","accel_arm_y","accel_arm_z",
+             "magnet_arm_x","magnet_arm_y","magnet_arm_z",
+             "roll_dumbbell","pitch_dumbbell","yaw_dumbbell","total_accel_dumbbell",
+             "gyros_dumbbell_x","gyros_dumbbell_y","gyros_dumbbell_z",
+             "accel_dumbbell_x","accel_dumbbell_y","accel_dumbbell_z",
+             "magnet_dumbbell_x","magnet_dumbbell_y","magnet_dumbbell_z",
+             "roll_forearm","pitch_forearm","yaw_forearm","total_accel_forearm",
+             "gyros_forearm_x","gyros_forearm_y","gyros_forearm_z",
+             "accel_forearm_x","accel_forearm_y","accel_forearm_z",
+             "magnet_forearm_x","magnet_forearm_y","magnet_forearm_z","classe")
+df1 <- df[, names(df) %in% filter1]
+```
+
+Next, we set up a K-fold cross validation on the training set using 3 folds. This cross validation will help balance the bias and variance of model predictions on out of sample data:
+
+```{r, echo=TRUE}
+library(caret)
+train_control <- trainControl(method="cv", number=3, savePredictions=TRUE)
+```
+
+We will use a k-nearest neighbors (KNN) model predict the activity type "classe" variable given that KNN can work well on multi-class classification. We will also center and scale the data to ensure consistency across variables. We will evaluate the accuracy of the KNN model using a confusion matrix: 
+
+```{r, echo=TRUE}
+model_knn <- train(classe ~ ., data=df1, trControl=train_control, method="kknn",
+                    metric="Accuracy", preProcess=c("center","scale"))
+confusionMatrix(df1$classe, predict(model_knn, df1[, !names(df1) %in% c("classe")]))
+```
+
+## Conclusion
+
+The KNN model produced 100% accuracy and a near-zero p-value on the training set. Using this KNN model, we would expect predictions on out of sample data to have some additional error as the model may be overfitting the training data. However the overall accuracy on out of sample predictions should remain very high.
