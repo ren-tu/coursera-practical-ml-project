@@ -1,4 +1,4 @@
-# coursera-practical-ml-project
+# Coursera Practical Machine Learning Project
 Coursera Practical Machine Learning Project: Prediction on Exercise Data
 
 Ren Tu
